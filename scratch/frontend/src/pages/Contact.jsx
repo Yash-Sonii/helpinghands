@@ -38,7 +38,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-brand-primary">Email Support</h3>
-                    <p className="text-xs text-gray-500 mt-1">support@helpinghands.org</p>
+                    <p className="text-xs text-gray-500 mt-1">operator@helpinghands.org</p>
                   </div>
                 </div>
 
@@ -48,7 +48,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-brand-primary">Phone Inquiries</h3>
-                    <p className="text-xs text-gray-500 mt-1">+1 (555) 123-4567</p>
+                    <p className="text-xs text-gray-500 mt-1">+91 8866977802</p>
                   </div>
                 </div>
 
@@ -58,7 +58,7 @@ export const Contact = () => {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-brand-primary">Headquarters</h3>
-                    <p className="text-xs text-gray-500 mt-1">100 Social Impact Ave, Suite 300, San Francisco, CA</p>
+                    <p className="text-xs text-gray-500 mt-1">Sardar Vallabhabhai Global University, SG highway ,Prahaldnagar nagar, Ahmedabad</p>
                   </div>
                 </div>
               </div>
@@ -95,7 +95,7 @@ export const Contact = () => {
                         type="text" 
                         required
                         className="w-full bg-brand-secondary border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary transition-colors"
-                        placeholder="John Doe"
+                        placeholder="Bhavya Solanki"
                         value={form.name}
                         onChange={e => setForm({ ...form, name: e.target.value })}
                       />
@@ -106,7 +106,7 @@ export const Contact = () => {
                         type="email" 
                         required
                         className="w-full bg-brand-secondary border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-brand-primary transition-colors"
-                        placeholder="john@example.com"
+                        placeholder="bhavya@example.com"
                         value={form.email}
                         onChange={e => setForm({ ...form, email: e.target.value })}
                       />

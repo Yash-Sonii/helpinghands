@@ -55,31 +55,7 @@ export const About = () => {
           </div>
 
           {/* How It Works */}
-          <div className="pt-8 border-t border-brand-border">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 rounded bg-yellow-50 flex items-center justify-center border border-brand-accent/10">
-                <BookOpen className="w-4.5 h-4.5 text-brand-accent" />
-              </div>
-              <h2 className="text-2xl font-bold text-brand-primary">High-Level Architecture</h2>
-            </div>
-            <p className="text-gray-600 leading-relaxed text-sm mb-6">
-              The project is built using a modern decoupled layout, offering high maintainability:
-            </p>
-            <div className="bg-brand-secondary border border-brand-border rounded-xl p-6 font-mono text-xs text-brand-primary">
-              <div className="flex items-center space-x-2">
-                <span className="font-semibold text-brand-accent">[Presentation]</span>
-                <span>React SPA built with CSS Variables & Bootstrap-aligned parameters.</span>
-              </div>
-              <div className="flex items-center space-x-2 mt-2">
-                <span className="font-semibold text-brand-accent">[Business Logic]</span>
-                <span>FastAPI endpoints handling token checks, validation algorithms.</span>
-              </div>
-              <div className="flex items-center space-x-2 mt-2">
-                <span className="font-semibold text-brand-accent">[Data Access]</span>
-                <span>PostgreSQL DB (Supabase) storing transactions and attendance audit trails.</span>
-              </div>
-            </div>
-          </div>
+          
 
         </div>
 

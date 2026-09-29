@@ -36,7 +36,6 @@ def calculate_haversine_distance(lat1: float, lon1: float, lat2: float, lon2: fl
         math.sin(delta_lambda / 2.0) ** 2
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
     return R * c
-
 @router.post("/requirements/{id}/checkin")
 async def checkin(
     id: UUID,
@@ -169,11 +168,9 @@ async def checkin(
         )
 
     try:
-        # Default hours earned: 4.0 hours, default points: 20
-        HOURS_EARNED = 4.0
-        POINTS_EARNED = 20
-
-        # 1. Insert attendance record
+        # Insert (or re-insert on conflict) the attendance record.
+        # No hours or points are awarded at check-in — those are calculated
+        # from the actual checkin→checkout duration at checkout time.
         attendance_insert = text("""
             INSERT INTO attendance (requirement_id, volunteer_profile_id, status, checkin_latitude, checkin_longitude, checkin_distance_meters, checkin_time)
             VALUES (:requirement_id, (SELECT id FROM volunteer_profiles WHERE user_id = :volunteer_user_id), 'checked_in', :checkin_lat, :checkin_lon, :distance, :checkin_time)
@@ -189,32 +186,15 @@ async def checkin(
             "checkin_time": datetime.now(timezone.utc)
         })
 
-        # 2. Reward the volunteer profile
-        profile_update = text("""
-            UPDATE volunteer_profiles
-            SET total_hours = total_hours + :hours,
-                credit_points = credit_points + :points,
-                trust_score = GREATEST(0, LEAST(100, trust_score + 1))
-            WHERE user_id = :user_id
-        """)
-        await db.execute(profile_update, {
-            "hours": HOURS_EARNED,
-            "points": POINTS_EARNED,
-            "user_id": current_user["id"]
-        })
-
-        # 3. Add to credits audit log
-        log_insert = text("""
-            INSERT INTO credits_log (volunteer_profile_id, requirement_id, points_change, hours_change, reason, remarks)
-            VALUES ((SELECT id FROM volunteer_profiles WHERE user_id = :volunteer_user_id), :requirement_id, :points_change, :hours_change, 'attendance', :remarks)
-        """)
-        await db.execute(log_insert, {
-            "volunteer_user_id": current_user["id"],
-            "requirement_id": id,
-            "points_change": POINTS_EARNED,
-            "hours_change": HOURS_EARNED,
-            "remarks": f"Checked in at {req['title']}"
-        })
+        # Trust score nudge only — no hours/points at check-in
+        await db.execute(
+            text("""
+                UPDATE volunteer_profiles
+                SET trust_score = GREATEST(0, LEAST(100, trust_score + 1))
+                WHERE user_id = :user_id
+            """),
+            {"user_id": current_user["id"]}
+        )
 
         await db.commit()
 
@@ -223,8 +203,6 @@ async def checkin(
             "message": "Checked in successfully!",
             "distance": round(distance, 1),
             "allowed_radius": allowed_radius,
-            "hours_rewarded": HOURS_EARNED,
-            "points_rewarded": POINTS_EARNED
         }
     except Exception as e:
         await db.rollback()
@@ -286,44 +264,15 @@ async def verify_attendance(
         raise HTTPException(status_code=403, detail="Forbidden: You are not authorized to verify this attendance record")
 
     try:
-        query = text("""
-            UPDATE attendance
-            SET status = 'verified'
-            WHERE id = :id
-        """)
-        await db.execute(query, {"id": id})
-
-        # Since they are manually marked present, we reward them as well
-        HOURS_EARNED = 4.0
-        POINTS_EARNED = 20
-
-        profile_update = text("""
-            UPDATE volunteer_profiles
-            SET total_hours = total_hours + :hours,
-                credit_points = credit_points + :points
-            WHERE id = :volunteer_profile_id
-        """)
-        await db.execute(profile_update, {
-            "hours": HOURS_EARNED,
-            "points": POINTS_EARNED,
-            "volunteer_profile_id": att["volunteer_profile_id"]
-        })
-
-        log_insert = text("""
-            INSERT INTO credits_log (volunteer_profile_id, requirement_id, points_change, hours_change, reason, remarks)
-            VALUES (:volunteer_profile_id, :requirement_id, :points_change, :hours_change, 'attendance', :remarks)
-        """)
-        await db.execute(log_insert, {
-            "volunteer_profile_id": att["volunteer_profile_id"],
-            "requirement_id": att["requirement_id"],
-            "points_change": POINTS_EARNED,
-            "hours_change": HOURS_EARNED,
-            "remarks": "Manual attendance override"
-        })
-
+        # Mark attendance as verified. Hours and points were already awarded
+        # at checkout time (based on real checkin→checkout duration).
+        # Do NOT add a second fixed reward here.
+        await db.execute(
+            text("UPDATE attendance SET status = 'verified' WHERE id = :id"),
+            {"id": id}
+        )
         await db.commit()
-
-        return {"status": "success", "message": "Attendance record marked as present & rewarded"}
+        return {"status": "success", "message": "Attendance record marked as verified"}
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=400, detail=f"Failed to verify attendance: {str(e)}")
